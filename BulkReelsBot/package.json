@@ -1,0 +1,94 @@
+{
+  "name": "bulk-reels-upload-pro",
+  "version": "1.4.6",
+  "description": "Bulk Reels Upload Pro — multi-profile Facebook/Reels automation (Electron + React + Playwright + SQLite)",
+  "main": "main.js",
+  "author": "Munna",
+  "scripts": {
+    "dev": "concurrently -k -n VITE,ELECTRON -c cyan,magenta \"npm:vite\" \"npm:start:wait\"",
+    "vite": "vite --config vite.config.mjs build --watch",
+    "build": "vite --config vite.config.mjs build",
+    "prestart": "node -e \"require('fs').existsSync('dist/index.html')||require('child_process').execSync('npm run build',{stdio:'inherit'})\"",
+    "start": "electron .",
+    "start:wait": "wait-on dist/index.html && electron .",
+    "postinstall": "vite --config vite.config.mjs build",
+    "pack:win": "npm run build && electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.munna.bulkreelsuploadpro",
+    "productName": "Bulk Reels Upload Pro",
+    "directories": { "output": "release", "buildResources": "resources" },
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/auth/**/*",
+      "src/bot.js",
+      "src/database.js",
+      "src/chromiumBootstrap.js",
+      "dist/**/*",
+      "package.json",
+      "!node_modules/playwright/.local-browsers/**",
+      "!node_modules/playwright-core/.local-browsers/**",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,thumbs.db,.gitignore,.gitattributes}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*",
+      "node_modules/bindings/**/*",
+      "node_modules/file-uri-to-path/**/*",
+      "node_modules/playwright/**/*",
+      "node_modules/playwright-core/**/*"
+    ],
+    "win": {
+      "target": ["portable"],
+      "icon": "resources/icon.ico",
+      "artifactName": "BulkReelsUploadPro-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "BulkReelsUploadPro-${version}.${ext}",
+      "requestExecutionLevel": "user",
+      "unpackDirName": "BulkReelsUploadPro"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "differentialPackage": false,
+      "installerIcon": "resources/icon.ico",
+      "uninstallerIcon": "resources/icon.ico",
+      "installerHeaderIcon": "resources/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Bulk Reels Upload Pro"
+    }
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.2.0",
+    "playwright": "1.59.0",
+    "playwright-core": "1.59.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^8.2.2",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.3",
+    "vite": "^5.2.11",
+    "wait-on": "^7.2.0"
+  }
+}

@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background:
+    radial-gradient(1200px 600px at 90% -10%, rgba(34,211,238,0.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 100%, rgba(244,114,182,0.05), transparent 60%),
+    #0b1220;
+  color: #e6edf5;
+  font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #1e3a63; border-radius: 8px; }
+::-webkit-scrollbar-track { background: #0b1220; }
+
+@layer components {
+  .panel { @apply bg-panel/80 border border-border rounded-2xl; }
+  .card-tile {
+    @apply bg-card2 border border-border rounded-xl px-5 py-4 flex flex-col items-center justify-center transition;
+  }
+  .card-tile:hover { @apply border-border2; }
+  .card-tile.active { box-shadow: 0 0 0 1px #22d3ee, 0 0 24px rgba(34,211,238,0.15); }
+  .tile-label { @apply text-[11px] uppercase tracking-wider text-muted mb-1; }
+  .tile-value { @apply text-3xl font-bold; }
+
+  .side-item {
+    @apply w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-slate-300 transition;
+  }
+  .side-item:hover { @apply bg-white/5 text-white; }
+  .side-item.active { @apply bg-white/5 text-cyanx border-l-2 border-cyanx; }
+
+  .btn { @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition select-none; }
+  .btn-primary { @apply btn bg-cyanx/20 text-cyanx border border-cyanx/40 hover:bg-cyanx/30; }
+  .btn-blue    { @apply btn bg-blue-600 hover:bg-blue-500 text-white; }
+  .btn-purple  { @apply btn bg-purple-600 hover:bg-purple-500 text-white; }
+  .btn-orange  { @apply btn bg-orange-500 hover:bg-orange-400 text-white; }
+  .btn-red     { @apply btn bg-rose-600 hover:bg-rose-500 text-white; }
+  .btn-green   { @apply btn bg-emerald-600 hover:bg-emerald-500 text-white; }
+  .btn-ghost   { @apply btn bg-white/5 hover:bg-white/10 text-slate-200 border border-border; }
+
+  .chip { @apply inline-block text-xs px-2.5 py-1 rounded-md bg-white/5 border border-border text-slate-200; }
+  .input-dark {
+    @apply w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white
+           placeholder-slate-500 focus:outline-none focus:border-cyanx transition;
+    /* Defensive: always allow pointer events / text selection on inputs even
+       if a parent stacking context accidentally intercepts clicks. Same
+       treatment as .input — fixes the "modal input not clickable" bug when
+       another fixed overlay (e.g. UpdateNotifier banner) shares z-index. */
+    pointer-events: auto !important;
+    -webkit-user-select: text;
+    user-select: text;
+    position: relative;
+    z-index: 1;
+  }
+  textarea.input-dark {
+    z-index: 2;
+  }
+  .input {
+    @apply w-full bg-panel border border-border rounded-lg px-3 py-2 text-sm text-white
+           focus:outline-none focus:ring-2 focus:ring-cyanx/50 focus:border-cyanx/50;
+    /* Defensive: always allow pointer events on inputs/textareas, even if a
+       parent accidentally disables them. Fixes the "textarea not clickable"
+       intermittent bug. */
+    pointer-events: auto !important;
+    -webkit-user-select: text;
+    user-select: text;
+    position: relative;
+    z-index: 1;
+  }
+  textarea.input {
+    /* Textareas often live under sticky headers/footers; make sure they can
+       always receive clicks. */
+    z-index: 2;
+  }
+  .label { @apply block text-[11px] uppercase tracking-wider text-muted mb-1.5; }
+  .h-title { @apply text-xl font-bold text-white; }
+  .table-row { @apply border-t border-border hover:bg-white/[0.02]; }
+}
+
+.status-restricted   { color: #f43f5e; }
+.status-no-restrict  { color: #34d399; }
+.status-login-failed { color: #f59e0b; }
+.status-unknown      { color: #60a5fa; }
+.status-upload-ok    { color: #22d3ee; }
+.status-upload-fail  { color: #f43f5e; }
+
+.terminal {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  background: #000;
+  color: #a3ff9d;
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-height: 320px;
+  max-height: 46vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.terminal .ok   { color: #34d399; }
+.terminal .fail { color: #f87171; }
+.terminal .info { color: #93c5fd; }
+.terminal .warn { color: #fbbf24; }

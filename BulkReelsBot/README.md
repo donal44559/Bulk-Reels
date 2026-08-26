@@ -1,4 +1,4 @@
-# Bulk Reels Upload Pro — V1.4
+# Bulk Reels Upload Pro — V1.5.0
 
 Multi-profile Facebook/Reels automation desktop app.
 **Electron + React + Tailwind + Playwright + SQLite**.
@@ -63,7 +63,7 @@ npm run pack:win
 
 Or simply double-click **`BUILD_EXE.bat`** on a Windows PC (it runs
 `npm install` + `npm run pack:win` automatically). The output is a portable
-standalone EXE at `release\BulkReelsUploadPro-1.4.6.exe`.
+standalone EXE at `release\BulkReelsUploadPro-1.5.0.exe`.
 
 ## Excel import columns
 
@@ -93,4 +93,4 @@ Everything is stored inside the Electron `userData` folder:
 The task executors in `src/bot.js` include working scaffolding (launch, navigate, upload input) but Facebook's DOM changes frequently. Adjust the selectors inside `executeTask()` for whichever site/flow you target — the concurrency, pause/resume/stop, logging, and state machine will work as-is.
 
 ---
-Developed by: **MUNNA** · V1.4
+Developed by: **MUNNA** · V1.5.0

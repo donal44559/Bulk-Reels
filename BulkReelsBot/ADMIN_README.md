@@ -58,7 +58,7 @@
 ```bash
 npm install
 npm run build          # compile React
-npm run pack:win       # produces dist-electron/BulkReelsUploadPro-Setup-1.4.0.exe
+npm run pack:win       # produces release/BulkReelsUploadPro-1.5.0.exe (portable)
 ```
 
 The exe is a self-contained installer. Users just download & install.

@@ -62,6 +62,11 @@ function clearAuthCache() {
 // ============================================================
 
 // Called from Activation screen (first run or after logout)
+// SECURITY: tool_users SELECT/UPDATE are RLS-blocked for the anon key now
+// (see supabase_security_fix.sql). Activation therefore goes through the
+// SECURITY DEFINER RPC public.activate_license, which checks username+key,
+// refreshes last_seen and binds machine_id ONLY when it is still empty.
+// The RPC never returns the activation_key itself.
 async function activateUser({ username, activation_key }) {
   if (!username || !activation_key) {
     return { success: false, error: 'Username and activation key required' };
@@ -69,41 +74,37 @@ async function activateUser({ username, activation_key }) {
   const client = getAnonClient();
   const uname = String(username).trim().toLowerCase();
   const key   = String(activation_key).trim();
+  const machineId = getMachineId();
 
-  const { data, error } = await client
-    .from('tool_users')
-    .select('*')
-    .eq('username', uname)
-    .eq('activation_key', key)
-    .maybeSingle();
+  const { data, error } = await client.rpc('activate_license', {
+    p_username:  uname,
+    p_key:       key,
+    p_machine_id: machineId,
+  });
 
   if (error) return { success: false, error: 'Network error: ' + error.message };
-  if (!data)  return { success: false, error: 'Invalid username or activation key' };
-  if (data.is_blocked) return { success: false, error: 'Your account has been blocked. Contact admin.' };
+  const data0 = Array.isArray(data) ? data[0] : data;
+  if (!data0) return { success: false, error: 'Invalid username or activation key' };
+  if (data0.is_blocked) return { success: false, error: 'Your account has been blocked. Contact admin.' };
 
-  const expiresAt = new Date(data.expires_at);
+  const expiresAt = new Date(data0.expires_at);
   if (expiresAt.getTime() < Date.now()) {
     return { success: false, error: `License expired on ${expiresAt.toLocaleDateString()}` };
   }
 
-  const machineId = getMachineId();
-  // Device lock — if a machine_id is set and doesn't match, reject
-  if (data.machine_id && data.machine_id !== machineId) {
+  // Device lock — if the row is bound to another machine, reject
+  if (data0.machine_id && data0.machine_id !== machineId) {
     return { success: false, error: 'This license is already activated on another device.' };
   }
 
-  // Update last_seen + bind machine_id (if not set)
-  const patch = { last_seen_at: new Date().toISOString() };
-  if (!data.machine_id) patch.machine_id = machineId;
-  await client.from('tool_users').update(patch).eq('id', data.id);
-
+  // C6: the auth cache stores NO activation key — only user_id + profile +
+  // expiry. Live re-verification works by user_id (verify_license RPC).
   const cache = {
-    user_id:        data.id,
-    username:       data.username,
-    activation_key: data.activation_key,
-    full_name:      data.full_name || '',
-    is_admin:       !!data.is_admin,
-    expires_at:     data.expires_at,
+    user_id:        data0.id,
+    username:       data0.username,
+    full_name:      data0.full_name || '',
+    is_admin:       !!data0.is_admin,
+    expires_at:     data0.expires_at,
     activated_at:   new Date().toISOString(),
     machine_id:     machineId,
   };
@@ -126,41 +127,44 @@ async function verifyStoredAuth() {
   // Try live check — if network fails, allow offline as long as local expiry is OK
   try {
     const client = getAnonClient();
-    const { data, error } = await client
-      .from('tool_users')
-      .select('username, activation_key, expires_at, is_blocked, machine_id, full_name, is_admin')
-      .eq('id', cache.user_id)
-      .maybeSingle();
+    // Direct SELECT on tool_users is RLS-blocked — the live check goes
+    // through the SECURITY DEFINER RPC verify_license (by user_id), which
+    // also refreshes last_seen server-side and returns only safe fields.
+    const { data, error } = await client.rpc('verify_license', { p_id: cache.user_id });
 
     if (error) {
       // Network error → allow offline based on cache
       return { success: true, user: cache, offline: true };
     }
-    if (!data) {
+    const data0 = Array.isArray(data) ? data[0] : data;
+    if (!data0) {
       // User deleted from server
       clearAuthCache();
       return { success: false, error: 'License revoked', needsActivation: true };
     }
-    if (data.is_blocked) {
+    if (data0.is_blocked) {
       clearAuthCache();
       return { success: false, error: 'Your account has been blocked', blocked: true };
     }
     // Device changed?
     const currentMachine = getMachineId();
-    if (data.machine_id && data.machine_id !== currentMachine) {
+    if (data0.machine_id && data0.machine_id !== currentMachine) {
       clearAuthCache();
       return { success: false, error: 'License bound to a different device', needsActivation: true };
     }
-    // Refresh cache with server truth (expiry might have been extended by admin)
+    // Refresh cache with server truth (expiry might have been extended by admin).
+    // C6: rebuild the cache explicitly WITHOUT any legacy plaintext key.
     const fresh = {
-      ...cache,
-      full_name:  data.full_name || cache.full_name,
-      is_admin:   !!data.is_admin,
-      expires_at: data.expires_at,
+      user_id:      data0.id,
+      username:     data0.username,
+      full_name:    data0.full_name || cache.full_name || '',
+      is_admin:     !!data0.is_admin,
+      expires_at:   data0.expires_at,
+      activated_at: cache.activated_at || new Date().toISOString(),
+      machine_id:   currentMachine,
     };
     writeAuthCache(fresh);
-    // Update last_seen (best effort)
-    client.from('tool_users').update({ last_seen_at: new Date().toISOString() }).eq('id', cache.user_id).then(() => {}, () => {});
+    // (last_seen is refreshed server-side by the verify_license RPC)
     return { success: true, user: fresh, offline: false };
   } catch (e) {
     // Network broken — offline mode is fine as long as local cache is not expired
@@ -182,7 +186,9 @@ let _adminUnlocked = false;
 async function adminLogin({ password }) {
   if (!password) return { success: false, error: 'Password required' };
   try {
-    const client = getAnonClient();
+    // C4: admin_config is no longer anon-readable (RLS policy dropped) —
+    // the password hash is read with the admin (service) client instead.
+    const client = getAdminClient();
     const { data, error } = await client
       .from('admin_config')
       .select('value')

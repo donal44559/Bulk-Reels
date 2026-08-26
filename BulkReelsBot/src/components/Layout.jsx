@@ -47,7 +47,7 @@ export default function Layout({ page, onNavigate, children, title, headerExtra,
 
         <div className="p-3">
           <div className="mx-1 px-3 py-2 rounded-md border border-cyanx/40 text-cyanx text-[11px] font-bold tracking-wider text-center">
-            DEVELOPED BY : RAKIB | V1.4
+            DEVELOPED BY : RAKIB | V1.5
           </div>
         </div>
       </aside>

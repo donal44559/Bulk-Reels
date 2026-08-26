@@ -14,7 +14,7 @@ Manual way (nichhe) o same kaj kore.
 
 ## Ki Toiri Hobe
 
-**Output file (portable):** `release\BulkReelsUploadPro-1.4.6.exe`
+**Output file (portable):** `release\BulkReelsUploadPro-1.5.0.exe`
 - Size: ~80-100 MB
 - First launch e: Chromium engine (~170 MB) auto-download (one-time), Playwright-এর registry API diye
 - **Total disk usage after first launch:** ~370 MB
@@ -59,13 +59,13 @@ npm run pack:win
 
 Success hole output:
 ```
-release\BulkReelsUploadPro-1.4.6.exe
+release\BulkReelsUploadPro-1.5.0.exe
 ```
 
 ### Step 4: EXE File Find Koro
 ```
 release\
-├── BulkReelsUploadPro-1.4.6.exe    ← EI TA USER KE DAO ✅
+├── BulkReelsUploadPro-1.5.0.exe    ← EI TA USER KE DAO ✅
 ├── win-unpacked/                    ← Ignore
 └── builder-effective-config.yaml    ← Ignore
 ```
@@ -74,7 +74,7 @@ release\
 
 ## User Perspective (jokhon cholabe)
 
-1. `BulkReelsUploadPro-1.4.6.exe` double-click → Windows SmartScreen warning ashte pare (unsigned exe — "More info" → "Run anyway")
+1. `BulkReelsUploadPro-1.5.0.exe` double-click → Windows SmartScreen warning ashte pare (unsigned exe — "More info" → "Run anyway")
 2. **First Launch:** "🚀 First-time Setup" window ashbe → Chromium engine (~170 MB) download
    - ⏳ Internet speed depending — 2-10 min
 3. **Activation Screen** → username + activation key
@@ -109,9 +109,9 @@ False positive — electron packagers ke sometimes AV bhul kore. Whitelist add k
 
 ## Version Update Kore Notun exe Publish
 
-1. `package.json` e version bump (e.g. `1.4.6` → `1.5.0`)
+1. `package.json` e version bump (e.g. `1.5.0` → `1.6.0`)
 2. Rebuild: `npm run pack:win`
-3. Output: `release\BulkReelsUploadPro-1.5.0.exe`
+3. Output: `release\BulkReelsUploadPro-1.6.0.exe`
 4. Upload + Admin Panel → App Updates → Publish
 
 ---
@@ -134,7 +134,7 @@ npm start
 
 **Find output:**
 ```
-release\BulkReelsUploadPro-1.4.6.exe
+release\BulkReelsUploadPro-1.5.0.exe
 ```
 
 ---

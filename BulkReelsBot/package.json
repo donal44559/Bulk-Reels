@@ -1,6 +1,6 @@
 {
   "name": "bulk-reels-upload-pro",
-  "version": "1.4.6",
+  "version": "1.5.0",
   "description": "Bulk Reels Upload Pro — multi-profile Facebook/Reels automation (Electron + React + Playwright + SQLite)",
   "main": "main.js",
   "author": "Munna",
@@ -11,7 +11,7 @@
     "prestart": "node -e \"require('fs').existsSync('dist/index.html')||require('child_process').execSync('npm run build',{stdio:'inherit'})\"",
     "start": "electron .",
     "start:wait": "wait-on dist/index.html && electron .",
-    "postinstall": "vite --config vite.config.mjs build",
+    "postinstall": "vite --config vite.config.mjs build && electron-builder install-app-deps",
     "pack:win": "npm run build && electron-builder --win --x64"
   },
   "build": {

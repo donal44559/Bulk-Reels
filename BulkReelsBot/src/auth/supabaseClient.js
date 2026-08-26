@@ -70,6 +70,18 @@ function _client(key) {
     from(table) {
       return new QueryBuilder(key, `/${table}`);
     },
+    // PostgREST RPC call: POST /rest/v1/rpc/<fn> with named-argument body.
+    // Returns { data, error } like supabase-js so authService.js can use
+    // SECURITY DEFINER functions (activate_license / verify_license) with
+    // the anon key now that direct table reads/writes are RLS-blocked.
+    async rpc(fnName, params) {
+      try {
+        const data = await _req(key, 'POST', `/rpc/${fnName}`, { body: params || {} });
+        return { data, error: null };
+      } catch (e) {
+        return { data: null, error: { message: e.message, status: e.status } };
+      }
+    },
   };
 }
 

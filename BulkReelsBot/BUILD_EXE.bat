@@ -69,7 +69,7 @@ echo.
 
 echo ============================================================
 echo   DONE! Your EXE is in the .\release folder:
-echo     %~dp0release\BulkReelsUploadPro-1.4.6.exe
+echo     %~dp0release\BulkReelsUploadPro-1.5.0.exe
 echo ============================================================
 echo.
 echo   First time you run it, it will show a short "First-time Setup"

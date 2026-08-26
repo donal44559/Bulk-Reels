@@ -161,11 +161,38 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle('browser:close', async (_e, uid) => await closeProfile(uid));
   ipcMain.handle('browser:openMany', async (_e, uids) => {
-    const results = [];
-    for (const uid of uids) {
-      const p = await getProfile(uid);
-      if (p) results.push({ uid, ...(await openProfile(p)) });
-    }
+    // Open ALL selected profiles IN PARALLEL (bulk open).
+    // Previously this was a sequential for..await loop: profile #2 only
+    // started AFTER profile #1's whole open (launch + login + navigation)
+    // finished — so "Open Selection" opened one browser at a time, and if the
+    // user closed the current window mid-open the pending ops threw and the
+    // loop moved to the next profile (looked like "close one → next opens").
+    // Now every profile launches concurrently so the user gets real bulk
+    // browsers open at the same time. A wave cap keeps the PC safe when a
+    // huge number of profiles is selected: with the cap, the first 10 launch
+    // together and each next profile starts as soon as a slot frees — since
+    // opened browsers STAY open, everything still ends up open.
+    const list = Array.isArray(uids) ? uids : [];
+    const results = new Array(list.length);
+    let idx = 0;
+    const MAX_PARALLEL_OPENS = 10;   // simultaneous launches per wave
+    const openOne = async (uid) => {
+      try {
+        const p = await getProfile(uid);
+        if (!p) return { uid, success: false, error: 'Profile not found' };
+        return { uid, ...(await openProfile(p)) };
+      } catch (e) {
+        // Isolate per-profile failures so one bad profile can't break the batch
+        return { uid, success: false, error: (e && e.message) || String(e) };
+      }
+    };
+    const worker = async () => {
+      while (idx < list.length) {
+        const my = idx++;
+        results[my] = await openOne(list[my]);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(MAX_PARALLEL_OPENS, list.length) }, () => worker()));
     return results;
   });
   ipcMain.handle('browser:closeMany', async (_e, uids) => {

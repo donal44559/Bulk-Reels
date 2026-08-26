@@ -47,7 +47,7 @@ async function run() {
     check('all succeeded', res.every(r => r.success === true));
   }
 
-  console.log('— wave cap: 25 profiles → never more than 10 at once —');
+  console.log('— no cap: 25 profiles → ALL 25 open simultaneously —');
   {
     let inFlight = 0, maxInFlight = 0, completed = 0;
     const getProfile = async (uid) => ({ uid, name: 'P' + uid });
@@ -60,7 +60,7 @@ async function run() {
     const handler = runnerFactory(getProfile, openProfile);
     const res = await handler(Array.from({ length: 25 }, (_, i) => 'u' + i));
     check('all 25 processed', res.length === 25 && completed === 25);
-    check('max simultaneous launches = 10 (cap respected)', maxInFlight === 10, maxInFlight);
+    check('ALL 25 opened SIMULTANEOUSLY (no cap — user decides)', maxInFlight === 25, maxInFlight);
   }
 
   console.log('— one bad profile must not break the batch —');

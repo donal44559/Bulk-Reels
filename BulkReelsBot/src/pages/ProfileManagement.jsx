@@ -632,7 +632,8 @@ function StartTaskModal({ onClose, onRun, count }) {
       <div className="grid grid-cols-2 gap-3 mt-4">
         <div>
           <label className="label">Concurrency (browsers at same time)</label>
-          <input className="input" type="number" min="1" max="20" value={concurrency} onChange={e => setConcurrency(e.target.value)} />
+          {/* No max limit — the user decides how many browsers run in parallel */}
+          <input className="input" type="number" min="1" value={concurrency} onChange={e => setConcurrency(e.target.value)} />
         </div>
         <div>
           <label className="label">Delay between profiles (ms)</label>

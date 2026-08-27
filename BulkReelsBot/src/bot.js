@@ -3874,7 +3874,7 @@ async function bulkImportWithBrowserLogin(rows, opts = {}) {
   let done = 0;
   let idx = 0;
 
-  emitLog(`━━━ Importing ${rows.length} accounts — browser login test (${concurrency} parallel${headless ? ', headless' : ''}) ━━━`);
+  emitLog(`━━━ Importing ${rows.length} accounts — browser login test (${concurrency} parallel, windowed validation) ━━━`);
   emit({ total: rows.length, done: 0, valid: 0, dead: 0 });
 
   const worker = async () => {
@@ -3919,8 +3919,13 @@ async function bulkImportWithBrowserLogin(rows, opts = {}) {
         // `channel: 'chromium'` → use the already-installed full chromium-1217
         // in the new headless mode. Prevents the chromium-headless-shell
         // "Executable doesn't exist" failure that marked every account as Dead.
+        // ⚠️ WINDOWED VALIDATION (import fix): Facebook detects HEADLESS
+        // browsers and checkpoints even VALID cookies (this exact lesson is
+        // already documented in validateImportedProfiles below). All-imports-
+        // dead happened because of this — validation now runs in a real
+        // windowed browser; each browser auto-closes after its check.
         const browser = await chromium.launch({
-          headless,
+          headless: false,
           channel: 'chromium',
           args: ['--disable-blink-features=AutomationControlled', '--no-default-browser-check'],
           proxy: proxyObj,
@@ -4510,8 +4515,10 @@ async function filterOutRestrictedAccounts(validRows, opts = {}) {
         // `channel: 'chromium'` → use the already-installed full chromium-1217
         // in the new headless mode. Prevents the chromium-headless-shell
         // "Executable doesn't exist" failure during the post-check.
+        // ⚠️ WINDOWED (import fix): FB checkpoints headless sessions even for
+        // valid cookies — the post-check must see the REAL logged-in state.
         browser = await chromium.launch({
-          headless: true,
+          headless: false,
           channel: 'chromium',
           args: ['--disable-blink-features=AutomationControlled', '--no-default-browser-check'],
           proxy: proxyObj,
@@ -4529,6 +4536,8 @@ async function filterOutRestrictedAccounts(validRows, opts = {}) {
         if (cookieList.length) await context.addCookies(cookieList);
 
         page = await context.newPage();
+        // Windowed run → keep the window inside the visible display
+        await ensureWindowOnScreen(context, page);
         // Block heavy resources for speed — same trick as bulkImportWithBrowserLogin
         await page.route('**/*', (route) => {
           const t = route.request().resourceType();
